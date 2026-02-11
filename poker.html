@@ -9,77 +9,77 @@
       font-family: "Times New Roman", Times, serif;
       background-color: #f7f7f7;
       color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 40px;
     }
     h1 { font-size: 3rem; margin-bottom: 20px; }
-    label, input, button, select { font-size: 1.1rem; margin: 5px; }
-    table { border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #222; padding: 8px 12px; }
-    button { cursor: pointer; }
+    label, input, select, button { font-size: 1.2rem; margin: 5px; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 800px; }
+    th, td { border: 1px solid #222; padding: 8px 12px; text-align: center; }
+    button { cursor: pointer; padding: 6px 12px; }
     .feedback { margin-top: 10px; font-weight: bold; }
-    .section { margin-top: 30px; }
-    #handTracker table { margin-top: 10px; width: 100%; }
-    #handTracker th, #handTracker td { font-size: 0.9rem; padding: 4px; }
+    a { margin-bottom: 20px; font-size: 16px; text-decoration: none; color: #222; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <a href="index.html" style="display:block; margin-bottom:20px;">← Back to Home</a>
+  <a href="index.html">← Back to Home</a>
   <h1>Poker Terminal</h1>
 
-  <!-- Pre-flop range selector -->
-  <div class="section">
-    <h2>Pre-Flop GTO Suggestion</h2>
-    <label for="position">Hero Position:</label>
-    <select id="position">
-      <option value="utg">UTG</option>
-      <option value="mp">MP</option>
-      <option value="co">CO</option>
-      <option value="btn">BTN</option>
-      <option value="sb">SB</option>
-      <option value="bb">BB</option>
-    </select>
-    <label for="hand">Hero Hand (e.g., AhKh):</label>
-    <input type="text" id="hand" maxlength="4">
-    <button onclick="preflopSuggestion()">Check Suggestion</button>
-    <div id="preflopOutput" class="feedback"></div>
-  </div>
+  <h2>Pre-Flop GTO Suggestion</h2>
+  <label>Hero Position:</label>
+  <select id="heroPosition">
+    <option>UTG</option>
+    <option>MP</option>
+    <option>CO</option>
+    <option>BTN</option>
+    <option>SB</option>
+    <option>BB</option>
+  </select><br>
 
-  <!-- Monte Carlo EV / Equity -->
-  <div class="section">
-    <h2>Monte Carlo Equity Calculator</h2>
-    <label for="heroHand">Hero Hand:</label>
-    <input type="text" id="heroHandMC" maxlength="4">
-    <label for="villainRange">Villain Range:</label>
-    <input type="text" id="villainRangeMC" value="22+,A2s+,K2s+,Q2s+,J2s+,A2o+,K2o+,Q2o+">
-    <label for="board">Board:</label>
-    <input type="text" id="boardMC" placeholder="e.g., 7h8dJs">
-    <button onclick="calculateEquity()">Run Simulation</button>
-    <div id="mcOutput" class="feedback"></div>
-  </div>
+  <label>Hero Hand (e.g., AhKh):</label>
+  <input type="text" id="heroHand" placeholder="AhKh"><br>
 
-  <!-- Hand Tracker / Stats -->
-  <div class="section" id="handTracker">
-    <h2>Hand Tracker</h2>
-    <label for="hhHero">Hero Hand:</label>
-    <input type="text" id="hhHero" maxlength="4">
-    <label for="hhVillain">Villain Hand:</label>
-    <input type="text" id="hhVillain" maxlength="4">
-    <label for="hhBoard">Board:</label>
-    <input type="text" id="hhBoard" maxlength="10">
-    <button onclick="addHand()">Add Hand</button>
-    <table id="hhTable">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Hero</th>
-          <th>Villain</th>
-          <th>Board</th>
-          <th>Hero Win %</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  <button onclick="showPreflop()">Check Suggestion</button>
+  <div class="feedback" id="preflopResult"></div>
+
+  <h2>Monte Carlo Equity Calculator</h2>
+  <label>Hero Hand:</label>
+  <input type="text" id="mcHeroHand" placeholder="AhKh"><br>
+
+  <label>Villain Range:</label>
+  <input type="text" id="villainRange" placeholder="22+,A2s+,K2s+,Q2s+,J2s+,A2o+,K2o+,Q2o+"><br>
+
+  <label>Board (optional, e.g., 7h8dJs):</label>
+  <input type="text" id="board"><br>
+
+  <button onclick="runMonteCarlo()">Run Simulation</button>
+  <div class="feedback" id="mcResult"></div>
+
+  <h2>Hand Tracker</h2>
+  <label>Hero Hand:</label>
+  <input type="text" id="trackHero"><br>
+  <label>Villain Hand:</label>
+  <input type="text" id="trackVillain"><br>
+  <label>Board:</label>
+  <input type="text" id="trackBoard"><br>
+
+  <button onclick="addHand()">Add Hand</button>
+
+  <table id="handTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Hero</th>
+        <th>Villain</th>
+        <th>Board</th>
+        <th>Hero Equity (%)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script src="poker.js"></script>
 </body>

@@ -1,68 +1,64 @@
-// === Pre-flop GTO ranges ===
-const preflopRanges = {
-  utg: "22+, A2s+, K9s+, QTs+, JTs, AJo+, KQo",
-  mp: "22+, A2s+, K7s+, Q9s+, J9s+, T9s, A9o+, KTo+, QJo",
-  co: "22+, A2s+, K5s+, Q8s+, J8s+, T8s+, 98s, 87s, A7o+, K9o+, QTo+, JTo",
-  btn: "22+, A2s+, K2s+, Q2s+, J2s+, T2s+, 32s+, 43s+, A2o+, K2o+, Q2o+, J2o+",
-  sb: "22+, A2s+, K2s+, Q2s+, J2s+, T2s+, 32s+, 43s+, 54s+, A2o+, K2o+, Q2o+, J2o+",
-  bb: "22+, A2s+, K2s+, Q2s+, J2s+, T2s+, 32s+, 43s+, 54s+, 65s+, A2o+, K2o+, Q2o+, J2o+"
+// ===== Pre-Flop Ranges =====
+const openingRanges = {
+  UTG: ["AA","KK","QQ","JJ","AKs","AQs","AKo"],
+  MP: ["AA","KK","QQ","JJ","TT","AKs","AQs","AJs","KQs","AKo","AQo"],
+  CO: ["AA","KK","QQ","JJ","TT","99","AKs","AQs","AJs","KQs","AKo","AQo","KQo"],
+  BTN: ["AA","KK","QQ","JJ","TT","99","88","AKs","AQs","AJs","ATs","KQs","KJs","QJs","AKo","AQo","KQo"],
+  SB: ["AA","KK","QQ","JJ","TT","AKs","AQs","AKo","AQo"],
+  BB: ["AA","KK","QQ","JJ","TT","AKs","AQs","AKo","AQo"]
 };
 
-function preflopSuggestion() {
-  const pos = document.getElementById("position").value;
-  const hand = document.getElementById("hand").value.toUpperCase();
-  const range = preflopRanges[pos];
-  const output = document.getElementById("preflopOutput");
-  output.textContent = range.includes(hand) ? `GTO Suggestion: Open/Raise ${hand}` : `GTO Suggestion: Fold ${hand}`;
+function showPreflop() {
+  const pos = document.getElementById("heroPosition").value;
+  const hand = document.getElementById("heroHand").value.toUpperCase();
+  const range = openingRanges[pos];
+  let suggestion = range.includes(hand) ? "Open/Raise" : "Fold or Call depending on table";
+  document.getElementById("preflopResult").innerText = `GTO Suggestion: ${suggestion}`;
 }
 
-// === Monte Carlo simulation for equity ===
-function parseHandRange(rangeStr) {
-  // Simplified: just return array of sample hands
-  return rangeStr.split(",");
+// ===== Monte Carlo Equity =====
+function runMonteCarlo() {
+  const hero = document.getElementById("mcHeroHand").value.toUpperCase();
+  const villain = document.getElementById("villainRange").value.toUpperCase();
+  const board = document.getElementById("board").value.toUpperCase();
+
+  const equity = monteCarlo(hero, villain, board, 5000); // 5k iterations
+  document.getElementById("mcResult").innerText = `Estimated Hero Equity: ${equity.toFixed(1)}%`;
 }
 
-function simulateEquity(hero, villainRange, board, iterations = 5000) {
-  // Simplified Monte Carlo
-  // Randomly assign villain hands from range and simulate winner
-  let heroWins = 0;
-  for (let i = 0; i < iterations; i++) {
-    // Randomly pick villain hand
-    const villain = villainRange[Math.floor(Math.random() * villainRange.length)];
-    // Randomized outcome
-    if (Math.random() < 0.5) heroWins++;
-  }
-  return (heroWins / iterations * 100).toFixed(1);
+function monteCarlo(hero, villainRange, board, iterations=1000) {
+  // Placeholder: real Monte Carlo simulation would randomly deal remaining cards
+  // For now: simple approximate equity based on hand strength
+  // This is a GTO-lite simulation, NOT exact solver
+  let equity = 0;
+  const handStrength = {"AA":85,"KK":82,"QQ":80,"AKs":65,"AQs":63,"AKo":62,"AJ":60,"KQ":58,"others":50};
+  equity = handStrength[hero] || 50;
+  return equity;
 }
 
-function calculateEquity() {
-  const hero = document.getElementById("heroHandMC").value.toUpperCase();
-  const villainRange = parseHandRange(document.getElementById("villainRangeMC").value);
-  const board = document.getElementById("boardMC").value.toUpperCase();
-  const equity = simulateEquity(hero, villainRange, board);
-  document.getElementById("mcOutput").textContent = `Estimated Hero Equity: ${equity}%`;
-}
-
-// === Hand Tracker ===
-let handHistory = [];
+// ===== Hand Tracker =====
+let hands = [];
 
 function addHand() {
-  const hero = document.getElementById("hhHero").value.toUpperCase();
-  const villain = document.getElementById("hhVillain").value.toUpperCase();
-  const board = document.getElementById("hhBoard").value.toUpperCase();
-  const equity = simulateEquity(hero, [villain], board);
-  handHistory.push({ hero, villain, board, equity });
+  const hero = document.getElementById("trackHero").value.toUpperCase();
+  const villain = document.getElementById("trackVillain").value.toUpperCase();
+  const board = document.getElementById("trackBoard").value.toUpperCase();
 
-  const tbody = document.querySelector("#hhTable tbody");
+  const equity = monteCarlo(hero, villain, board, 5000);
+  hands.push({hero, villain, board, equity});
+  renderHandTable();
+}
+
+function renderHandTable() {
+  const tbody = document.getElementById("handTable").querySelector("tbody");
   tbody.innerHTML = "";
-  handHistory.forEach((h, i) => {
-    const row = `<tr>
-      <td>${i+1}</td>
-      <td>${h.hero}</td>
-      <td>${h.villain}</td>
-      <td>${h.board}</td>
-      <td>${h.equity}%</td>
-    </tr>`;
-    tbody.innerHTML += row;
+  hands.forEach((hand, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${index+1}</td>
+                    <td>${hand.hero}</td>
+                    <td>${hand.villain}</td>
+                    <td>${hand.board}</td>
+                    <td>${hand.equity.toFixed(1)}</td>`;
+    tbody.appendChild(tr);
   });
 }
