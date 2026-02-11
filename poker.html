@@ -2,84 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Poker Terminal</title>
-  <style>
-    body {
-      font-family: "Times New Roman", Times, serif;
-      background-color: #f7f7f7;
-      color: #222;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px;
-    }
-    h1 { font-size: 3rem; margin-bottom: 20px; }
-    label, input, select, button { font-size: 1.2rem; margin: 5px; }
-    table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 800px; }
-    th, td { border: 1px solid #222; padding: 8px 12px; text-align: center; }
-    button { cursor: pointer; padding: 6px 12px; }
-    .feedback { margin-top: 10px; font-weight: bold; }
-    a { margin-bottom: 20px; font-size: 16px; text-decoration: none; color: #222; }
-    a:hover { text-decoration: underline; }
-  </style>
 </head>
 <body>
-  <a href="index.html">← Back to Home</a>
   <h1>Poker Terminal</h1>
 
-  <h2>Pre-Flop GTO Suggestion</h2>
-  <label>Hero Position:</label>
+  <h2>Pre-Flop GTO</h2>
+  <label>Position:</label>
   <select id="heroPosition">
     <option>UTG</option>
     <option>MP</option>
     <option>CO</option>
-    <option>BTN</option>
+    <option selected>BTN</option>
     <option>SB</option>
     <option>BB</option>
-  </select><br>
+  </select>
 
-  <label>Hero Hand (e.g., AhKh):</label>
-  <input type="text" id="heroHand" placeholder="AhKh"><br>
+  <label>Hand:</label>
+  <input type="text" id="heroHand" placeholder="AhKh">
 
-  <button onclick="showPreflop()">Check Suggestion</button>
-  <div class="feedback" id="preflopResult"></div>
+  <button onclick="showPreflop()">Analyze</button>
+  <div id="preflopResult"></div>
 
-  <h2>Monte Carlo Equity Calculator</h2>
-  <label>Hero Hand:</label>
-  <input type="text" id="mcHeroHand" placeholder="AhKh"><br>
+  <hr>
+
+  <h2>Monte Carlo Equity</h2>
+  <label>Hero:</label>
+  <input type="text" id="mcHeroHand" placeholder="AhKh">
 
   <label>Villain Range:</label>
-  <input type="text" id="villainRange" placeholder="22+,A2s+,K2s+,Q2s+,J2s+,A2o+,K2o+,Q2o+"><br>
+  <input type="text" id="villainRange" placeholder="22+,A2s+,K9s+,ATo+">
 
-  <label>Board (optional, e.g., 7h8dJs):</label>
-  <input type="text" id="board"><br>
-
-  <button onclick="runMonteCarlo()">Run Simulation</button>
-  <div class="feedback" id="mcResult"></div>
-
-  <h2>Hand Tracker</h2>
-  <label>Hero Hand:</label>
-  <input type="text" id="trackHero"><br>
-  <label>Villain Hand:</label>
-  <input type="text" id="trackVillain"><br>
   <label>Board:</label>
-  <input type="text" id="trackBoard"><br>
+  <input type="text" id="board" placeholder="7h8dJs">
 
-  <button onclick="addHand()">Add Hand</button>
-
-  <table id="handTable">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Hero</th>
-        <th>Villain</th>
-        <th>Board</th>
-        <th>Hero Equity (%)</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <button onclick="runMonteCarlo()">Run</button>
+  <div id="mcResult"></div>
 
   <script src="poker.js"></script>
 </body>
