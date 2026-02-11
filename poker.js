@@ -1,88 +1,83 @@
-// Core Data
-let hands = [];
-let currentHand = null;
-
-// DOM elements
-const preflopInput = document.getElementById("preflop");
-const flopInput = document.getElementById("flop");
-const turnInput = document.getElementById("turn");
-const riverInput = document.getElementById("river");
-const addHandBtn = document.getElementById("add-hand");
-
-const playerInput = document.getElementById("player");
-const actionInput = document.getElementById("action");
-const sizeInput = document.getElementById("size");
-const addActionBtn = document.getElementById("add-action");
-
-const historyTableBody = document.querySelector("#history-table tbody");
-const statsOutput = document.getElementById("stats-output");
-const strategyOutput = document.getElementById("strategy-output");
-
-// Add hand
-addHandBtn.addEventListener("click", () => {
-  const hand = {
-    preflop: preflopInput.value.toUpperCase(),
-    flop: flopInput.value.toUpperCase(),
-    turn: turnInput.value.toUpperCase(),
-    river: riverInput.value.toUpperCase(),
-    actions: []
-  };
-  hands.push(hand);
-  currentHand = hand;
-  updateTable();
-  updateStats();
-  updateStrategy();
-  // Clear inputs
-  preflopInput.value = flopInput.value = turnInput.value = riverInput.value = "";
-});
-
-// Add action
-addActionBtn.addEventListener("click", () => {
-  if (!currentHand) return alert("Add a hand first!");
-  const action = {
-    player: playerInput.value || "Hero",
-    type: actionInput.value,
-    size: parseFloat(sizeInput.value) || 0
-  };
-  currentHand.actions.push(action);
-  updateTable();
-  updateStats();
-  updateStrategy();
-  playerInput.value = sizeInput.value = "";
-});
-
-// Update table
-function updateTable() {
-  historyTableBody.innerHTML = "";
-  hands.forEach((hand, i) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${i+1}</td>
-      <td>${hand.preflop}</td>
-      <td>${hand.flop}</td>
-      <td>${hand.turn}</td>
-      <td>${hand.river}</td>
-      <td>${hand.actions.map(a => `${a.player}:${a.type}(${a.size})`).join(", ")}</td>
-    `;
-    historyTableBody.appendChild(tr);
-  });
+// Helper functions
+function parseCard(card) {
+  const rank = card[0].toUpperCase();
+  const suit = card[1].toLowerCase();
+  return {rank,suit};
 }
 
-// Update stats (placeholder for advanced analysis)
-function updateStats() {
-  if (hands.length === 0) {
-    statsOutput.innerText = "No hands added yet.";
-    return;
+function generateDeck(exclude=[]) {
+  const suits = ['h','d','c','s'];
+  const ranks = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
+  let deck = [];
+  for (let r of ranks) {
+    for (let s of suits) {
+      const c = r+s;
+      if (!exclude.includes(c)) deck.push(c);
+    }
   }
-  // Example: count hands added
-  statsOutput.innerText = `Total hands tracked: ${hands.length}`;
+  return deck;
 }
 
-// Update strategy (placeholder for GTO/EV logic)
-function updateStrategy() {
-  if (!currentHand) {
-    strategyOutput.innerText = "No hands added yet.";
-    return;
+function randomChoice(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+// Very simple evaluator (placeholder for full evaluator)
+function handStrength(hero, villain, board, iterations=5000) {
+  // Use Monte Carlo simulation
+  let wins = 0, ties=0;
+  const used = [...hero,...villain,...board];
+  const deck = generateDeck(used);
+  for (let i=0;i<iterations;i++){
+    let remaining = [...deck];
+    let fullBoard = [...board];
+    while (fullBoard.length<5){
+      const c = randomChoice(remaining);
+      fullBoard.push(c);
+      remaining.splice(remaining.indexOf(c),1);
+    }
+    const heroScore = Math.random(); // placeholder for real hand evaluation
+    const villainScore = Math.random();
+    if (heroScore>villainScore) wins++;
+    else if(heroScore==villainScore) ties++;
   }
-  strategyOutput.innerText = "Strategy advice: TBD - advanced logic coming next.";
+  const equity = (wins + ties/2)/iterations*100;
+  return equity.toFixed(2);
+}
+
+// Range advice (placeholder, simple rules)
+function gtoAction(heroAction, equity) {
+  if(equity>70) return "Aggressive Bet/Raise";
+  if(equity>50) return "Standard Bet/Call";
+  if(equity>30) return "Cautious Call/Fold";
+  return "Fold";
+}
+
+// Main function
+function analyzeHand() {
+  const hero = [document.getElementById("hero1").value, document.getElementById("hero2").value];
+  const villain = [document.getElementById("villain1").value, document.getElementById("villain2").value];
+  const board = [
+    document.getElementById("flop1").value,
+    document.getElementById("flop2").value,
+    document.getElementById("flop3").value,
+    document.getElementById("turn").value,
+    document.getElementById("river").value
+  ].filter(c => c !== "");
+
+  const heroAction = document.getElementById("hero-action").value;
+  const villainAction = document.getElementById("villain-action").value;
+
+  // Equity simulation
+  const equity = handStrength(hero,villain,board,2000); // Monte Carlo iterations
+
+  // Recommended GTO action
+  const recommendedAction = gtoAction(heroAction, equity);
+
+  const resultsDiv = document.getElementById("results");
+  resultsDiv.innerHTML = `
+    Hero Equity: ${equity}%<br>
+    Recommended Hero Action: ${recommendedAction}<br>
+    Your action: ${heroAction}, Villain action: ${villainAction}<br>
+    <strong>Next Steps:</strong> Enter new actions or change board to simulate all possibilities.<br>
+    <em>Future upgrades: full hand-by-hand EV, multi-street analysis, villain ranges visualization.</em>
+  `;
 }

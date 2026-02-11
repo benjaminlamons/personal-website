@@ -1,97 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Poker Game Theory Lab</title>
-  <style>
-    body {
-      font-family: "Times New Roman", Times, serif;
-      background-color: #f7f7f7;
-      color: #222;
-      padding: 20px;
-    }
-    h1 { font-size: 2.5rem; margin-bottom: 20px; }
-    label, input, button { font-size: 1.1rem; margin: 5px; }
-    table { border-collapse: collapse; margin-top: 20px; width: 100%; }
-    th, td { border: 1px solid #222; padding: 6px 10px; text-align: center; }
-    button { cursor: pointer; margin-top: 10px; }
-    #stats, #strategy { margin-top: 20px; padding: 10px; border: 1px solid #222; background: #fff; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker Terminal</title>
+<style>
+body { font-family: "Times New Roman", Times, serif; background-color: #f7f7f7; color: #222; display:flex; flex-direction:column; align-items:center; padding:40px; }
+h1 { font-size:3rem; margin-bottom:20px; }
+label,input,button,select { font-size:1.2rem; margin:5px; }
+table { border-collapse:collapse; margin-top:20px; }
+th,td { border:1px solid #222; padding:8px 12px; }
+button { cursor:pointer; }
+.feedback { margin-top:10px; font-weight:bold; }
+.card-input { width:50px; text-align:center; }
+</style>
 </head>
 <body>
 
-  <a href="index.html" style="display:block; margin-bottom:20px; font-size:16px;">← Back to Home</a>
+<a href="index.html" style="display:block; margin-bottom:20px; font-family:'Times New Roman'; font-size:16px;">← Back to Home</a>
 
-  <h1>Poker Game Theory Lab</h1>
+<h1>Poker Terminal</h1>
 
-  <!-- Hand Input -->
-  <div id="hand-input">
-    <h2>Enter Hand</h2>
-    <label>Pre-flop (e.g., AhKh): </label>
-    <input type="text" id="preflop" maxlength="4">
-    <br>
-    <label>Flop (3 cards, e.g., QsJc9d): </label>
-    <input type="text" id="flop" maxlength="6">
-    <br>
-    <label>Turn (e.g., 2c): </label>
-    <input type="text" id="turn" maxlength="2">
-    <br>
-    <label>River (e.g., Td): </label>
-    <input type="text" id="river" maxlength="2">
-    <br>
-    <button id="add-hand">Add Hand</button>
-  </div>
+<div id="hand-inputs">
+<h2>Hero Cards</h2>
+<input class="card-input" id="hero1" placeholder="Ah">
+<input class="card-input" id="hero2" placeholder="Kd">
 
-  <!-- Action Input -->
-  <div id="action-input">
-    <h2>Action</h2>
-    <label>Player: </label>
-    <input type="text" id="player" placeholder="Hero or Villain">
-    <label>Action: </label>
-    <select id="action">
-      <option>check</option>
-      <option>call</option>
-      <option>bet</option>
-      <option>raise</option>
-      <option>fold</option>
-    </select>
-    <label>Size: </label>
-    <input type="number" id="size" placeholder="0">
-    <button id="add-action">Add Action</button>
-  </div>
+<h2>Villain Cards</h2>
+<input class="card-input" id="villain1" placeholder="Qc">
+<input class="card-input" id="villain2" placeholder="Js">
 
-  <!-- Hand History Table -->
-  <div id="hand-table">
-    <h2>Hand History</h2>
-    <table id="history-table">
-      <thead>
-        <tr>
-          <th>Hand #</th>
-          <th>Pre-flop</th>
-          <th>Flop</th>
-          <th>Turn</th>
-          <th>River</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<h2>Community Cards</h2>
+<input class="card-input" id="flop1" placeholder="2d">
+<input class="card-input" id="flop2" placeholder="7h">
+<input class="card-input" id="flop3" placeholder="Ts">
+<input class="card-input" id="turn" placeholder="3c">
+<input class="card-input" id="river" placeholder="9h">
+</div>
 
-  <!-- Stats / Analytics -->
-  <div id="stats">
-    <h2>Stats & Probabilities</h2>
-    <div id="stats-output">No hands added yet.</div>
-  </div>
+<div id="action-inputs" style="margin-top:20px;">
+<h2>Actions</h2>
+<label>Hero:</label>
+<select id="hero-action">
+  <option value="check">Check</option>
+  <option value="call">Call</option>
+  <option value="bet">Bet</option>
+  <option value="raise">Raise</option>
+  <option value="fold">Fold</option>
+</select>
 
-  <!-- Strategy Advice -->
-  <div id="strategy">
-    <h2>Strategy Advice</h2>
-    <div id="strategy-output">No hands added yet.</div>
-  </div>
+<label>Villain:</label>
+<select id="villain-action">
+  <option value="check">Check</option>
+  <option value="call">Call</option>
+  <option value="bet">Bet</option>
+  <option value="raise">Raise</option>
+  <option value="fold">Fold</option>
+</select>
 
-  <!-- Link JS -->
-  <script src="poker.js"></script>
+<button onclick="analyzeHand()">Analyze Hand</button>
+</div>
+
+<div id="results" class="feedback"></div>
+
+<script src="poker.js"></script>
 </body>
 </html>
