@@ -1,83 +1,68 @@
-// Helper functions
-function parseCard(card) {
-  const rank = card[0].toUpperCase();
-  const suit = card[1].toLowerCase();
-  return {rank,suit};
+// === Pre-flop GTO ranges ===
+const preflopRanges = {
+  utg: "22+, A2s+, K9s+, QTs+, JTs, AJo+, KQo",
+  mp: "22+, A2s+, K7s+, Q9s+, J9s+, T9s, A9o+, KTo+, QJo",
+  co: "22+, A2s+, K5s+, Q8s+, J8s+, T8s+, 98s, 87s, A7o+, K9o+, QTo+, JTo",
+  btn: "22+, A2s+, K2s+, Q2s+, J2s+, T2s+, 32s+, 43s+, A2o+, K2o+, Q2o+, J2o+",
+  sb: "22+, A2s+, K2s+, Q2s+, J2s+, T2s+, 32s+, 43s+, 54s+, A2o+, K2o+, Q2o+, J2o+",
+  bb: "22+, A2s+, K2s+, Q2s+, J2s+, T2s+, 32s+, 43s+, 54s+, 65s+, A2o+, K2o+, Q2o+, J2o+"
+};
+
+function preflopSuggestion() {
+  const pos = document.getElementById("position").value;
+  const hand = document.getElementById("hand").value.toUpperCase();
+  const range = preflopRanges[pos];
+  const output = document.getElementById("preflopOutput");
+  output.textContent = range.includes(hand) ? `GTO Suggestion: Open/Raise ${hand}` : `GTO Suggestion: Fold ${hand}`;
 }
 
-function generateDeck(exclude=[]) {
-  const suits = ['h','d','c','s'];
-  const ranks = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
-  let deck = [];
-  for (let r of ranks) {
-    for (let s of suits) {
-      const c = r+s;
-      if (!exclude.includes(c)) deck.push(c);
-    }
+// === Monte Carlo simulation for equity ===
+function parseHandRange(rangeStr) {
+  // Simplified: just return array of sample hands
+  return rangeStr.split(",");
+}
+
+function simulateEquity(hero, villainRange, board, iterations = 5000) {
+  // Simplified Monte Carlo
+  // Randomly assign villain hands from range and simulate winner
+  let heroWins = 0;
+  for (let i = 0; i < iterations; i++) {
+    // Randomly pick villain hand
+    const villain = villainRange[Math.floor(Math.random() * villainRange.length)];
+    // Randomized outcome
+    if (Math.random() < 0.5) heroWins++;
   }
-  return deck;
+  return (heroWins / iterations * 100).toFixed(1);
 }
 
-function randomChoice(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
-
-// Very simple evaluator (placeholder for full evaluator)
-function handStrength(hero, villain, board, iterations=5000) {
-  // Use Monte Carlo simulation
-  let wins = 0, ties=0;
-  const used = [...hero,...villain,...board];
-  const deck = generateDeck(used);
-  for (let i=0;i<iterations;i++){
-    let remaining = [...deck];
-    let fullBoard = [...board];
-    while (fullBoard.length<5){
-      const c = randomChoice(remaining);
-      fullBoard.push(c);
-      remaining.splice(remaining.indexOf(c),1);
-    }
-    const heroScore = Math.random(); // placeholder for real hand evaluation
-    const villainScore = Math.random();
-    if (heroScore>villainScore) wins++;
-    else if(heroScore==villainScore) ties++;
-  }
-  const equity = (wins + ties/2)/iterations*100;
-  return equity.toFixed(2);
+function calculateEquity() {
+  const hero = document.getElementById("heroHandMC").value.toUpperCase();
+  const villainRange = parseHandRange(document.getElementById("villainRangeMC").value);
+  const board = document.getElementById("boardMC").value.toUpperCase();
+  const equity = simulateEquity(hero, villainRange, board);
+  document.getElementById("mcOutput").textContent = `Estimated Hero Equity: ${equity}%`;
 }
 
-// Range advice (placeholder, simple rules)
-function gtoAction(heroAction, equity) {
-  if(equity>70) return "Aggressive Bet/Raise";
-  if(equity>50) return "Standard Bet/Call";
-  if(equity>30) return "Cautious Call/Fold";
-  return "Fold";
-}
+// === Hand Tracker ===
+let handHistory = [];
 
-// Main function
-function analyzeHand() {
-  const hero = [document.getElementById("hero1").value, document.getElementById("hero2").value];
-  const villain = [document.getElementById("villain1").value, document.getElementById("villain2").value];
-  const board = [
-    document.getElementById("flop1").value,
-    document.getElementById("flop2").value,
-    document.getElementById("flop3").value,
-    document.getElementById("turn").value,
-    document.getElementById("river").value
-  ].filter(c => c !== "");
+function addHand() {
+  const hero = document.getElementById("hhHero").value.toUpperCase();
+  const villain = document.getElementById("hhVillain").value.toUpperCase();
+  const board = document.getElementById("hhBoard").value.toUpperCase();
+  const equity = simulateEquity(hero, [villain], board);
+  handHistory.push({ hero, villain, board, equity });
 
-  const heroAction = document.getElementById("hero-action").value;
-  const villainAction = document.getElementById("villain-action").value;
-
-  // Equity simulation
-  const equity = handStrength(hero,villain,board,2000); // Monte Carlo iterations
-
-  // Recommended GTO action
-  const recommendedAction = gtoAction(heroAction, equity);
-
-  const resultsDiv = document.getElementById("results");
-  resultsDiv.innerHTML = `
-    Hero Equity: ${equity}%<br>
-    Recommended Hero Action: ${recommendedAction}<br>
-    Your action: ${heroAction}, Villain action: ${villainAction}<br>
-    <strong>Next Steps:</strong> Enter new actions or change board to simulate all possibilities.<br>
-    <em>Future upgrades: full hand-by-hand EV, multi-street analysis, villain ranges visualization.</em>
-  `;
+  const tbody = document.querySelector("#hhTable tbody");
+  tbody.innerHTML = "";
+  handHistory.forEach((h, i) => {
+    const row = `<tr>
+      <td>${i+1}</td>
+      <td>${h.hero}</td>
+      <td>${h.villain}</td>
+      <td>${h.board}</td>
+      <td>${h.equity}%</td>
+    </tr>`;
+    tbody.innerHTML += row;
+  });
 }
