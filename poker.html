@@ -2,43 +2,320 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Poker Terminal</title>
+  <style>
+    body {
+      font-family: "Times New Roman", Times, serif;
+      background-color: #ffffff;
+      color: #222;
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #222;
+      padding-bottom: 10px;
+    }
+
+    .section {
+      background: #f9f9f9;
+      padding: 25px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+    }
+
+    label {
+      font-size: 1.1rem;
+      margin-right: 10px;
+      font-weight: 600;
+    }
+
+    input, select {
+      font-size: 1.05rem;
+      margin: 8px 5px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: "Times New Roman", Times, serif;
+    }
+
+    input {
+      width: 200px;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 12px 24px;
+      font-size: 1.05rem;
+      background-color: #222;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      margin: 10px 5px;
+      font-family: "Times New Roman", Times, serif;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #444;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+      width: 100%;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #222;
+      color: white;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f5f5f5;
+    }
+
+    .form-row {
+      margin: 14px 0;
+    }
+
+    .help-text {
+      font-size: 0.9rem;
+      color: #666;
+      font-style: italic;
+      margin-top: 5px;
+      display: block;
+      font-weight: normal;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 30px;
+      font-size: 16px;
+      text-decoration: none;
+      color: #222;
+      font-weight: 600;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
+  <a class="back-link" href="index.html">← Back to Home</a>
+
   <h1>Poker Terminal</h1>
 
-  <h2>Pre-Flop GTO</h2>
-  <label>Position:</label>
-  <select id="heroPosition">
-    <option>UTG</option>
-    <option>MP</option>
-    <option>CO</option>
-    <option selected>BTN</option>
-    <option>SB</option>
-    <option>BB</option>
-  </select>
+  <!-- Pre-Flop GTO -->
+  <div class="section">
+    <h2>Pre-Flop GTO Strategy</h2>
 
-  <label>Hand:</label>
-  <input type="text" id="heroHand" placeholder="AhKh">
+    <div class="form-row">
+      <label>Position:</label>
+      <select id="heroPosition">
+        <option>UTG</option>
+        <option>MP</option>
+        <option>CO</option>
+        <option selected>BTN</option>
+        <option>SB</option>
+        <option>BB</option>
+      </select>
+    </div>
 
-  <button onclick="showPreflop()">Analyze</button>
-  <div id="preflopResult"></div>
+    <div class="form-row">
+      <label>Hand:</label>
+      <input type="text" id="heroHand" placeholder="AhKh">
+      <span class="help-text">Format: AhKh (Ace-King suited) or 7c7d (pair of sevens)</span>
+    </div>
 
-  <hr>
+    <div class="form-row">
+      <label>Action:</label>
+      <select id="actionType" onchange="toggleVsPosition()">
+        <option value="RFI">Open/Raise First In</option>
+        <option value="THREEBET">3-Bet (vs Raise)</option>
+        <option value="FOURBET">4-Bet (vs 3-Bet)</option>
+        <option value="CALL">Call vs Raise</option>
+      </select>
+    </div>
 
-  <h2>Monte Carlo Equity</h2>
-  <label>Hero:</label>
-  <input type="text" id="mcHeroHand" placeholder="AhKh">
+    <div class="form-row" id="vsPositionRow" style="display: none;">
+      <label>Vs Position:</label>
+      <select id="vsPosition">
+        <option>UTG</option>
+        <option>MP</option>
+        <option>CO</option>
+        <option>BTN</option>
+        <option>SB</option>
+        <option>BB</option>
+      </select>
+    </div>
 
-  <label>Villain Range:</label>
-  <input type="text" id="villainRange" placeholder="22+,A2s+,K9s+,ATo+">
+    <button onclick="showPreflop()">Analyze Hand</button>
+    <div id="preflopResult"></div>
+  </div>
 
-  <label>Board:</label>
-  <input type="text" id="board" placeholder="7h8dJs">
+  <!-- Monte Carlo Equity -->
+  <div class="section">
+    <h2>Monte Carlo Equity Calculator</h2>
 
-  <button onclick="runMonteCarlo()">Run</button>
-  <div id="mcResult"></div>
+    <div class="form-row">
+      <label>Hero Hand:</label>
+      <input type="text" id="mcHeroHand" placeholder="AhKh">
+    </div>
+
+    <div class="form-row">
+      <label>Villain Range:</label>
+      <input type="text" id="villainRange" placeholder="22+,A2s+,K9s+,ATo+" style="width: 300px;">
+      <span class="help-text">Examples: 22+ (all pairs), A2s+ (suited aces), QQ-77 (range)</span>
+    </div>
+
+    <div class="form-row">
+      <label>Board (optional):</label>
+      <input type="text" id="board" placeholder="7h8dJs">
+      <span class="help-text">Leave empty for pre-flop, enter 3-5 cards for flop/turn/river</span>
+    </div>
+
+    <button onclick="runMonteCarlo()">Run 10,000 Simulations</button>
+    <div id="mcResult"></div>
+  </div>
+
+  <!-- Pot Odds & EV -->
+  <div class="section">
+    <h2>Pot Odds & EV Calculator</h2>
+
+    <div class="form-row">
+      <label>Current Pot ($):</label>
+      <input type="number" id="potSize" placeholder="100" step="0.01">
+    </div>
+
+    <div class="form-row">
+      <label>Bet to Call ($):</label>
+      <input type="number" id="betSize" placeholder="50" step="0.01">
+    </div>
+
+    <div class="form-row">
+      <label>Your Equity (%):</label>
+      <input type="number" id="equityForEV" placeholder="45" min="0" max="100">
+      <span class="help-text">Use equity calculator above to get this value</span>
+    </div>
+
+    <button onclick="calculatePotOddsEV()">Calculate Decision</button>
+    <div id="potOddsResult"></div>
+  </div>
+
+  <!-- Board Texture -->
+  <div class="section">
+    <h2>Board Texture Analysis</h2>
+
+    <div class="form-row">
+      <label>Board Cards:</label>
+      <input type="text" id="boardTexture" placeholder="7h8dJs">
+      <span class="help-text">Enter 3-5 cards for flop/turn/river analysis</span>
+    </div>
+
+    <button onclick="analyzeBoardButton()">Analyze Board</button>
+    <div id="boardResult"></div>
+  </div>
+
+  <!-- Drawing Hands -->
+  <div class="section">
+    <h2>Drawing Hands Calculator</h2>
+
+    <div class="form-row">
+      <label>Your Hand:</label>
+      <input type="text" id="drawHero" placeholder="AhKh">
+    </div>
+
+    <div class="form-row">
+      <label>Board:</label>
+      <input type="text" id="drawBoard" placeholder="7h8hJs">
+    </div>
+
+    <div class="form-row">
+      <label>Street:</label>
+      <select id="street">
+        <option value="flop">Flop (2 cards to come)</option>
+        <option value="turn">Turn (1 card to come)</option>
+      </select>
+    </div>
+
+    <button onclick="analyzeDrawsButton()">Calculate Outs</button>
+    <div id="drawResult"></div>
+  </div>
+
+  <!-- Hand History Tracker -->
+  <div class="section">
+    <h2>Hand History Tracker</h2>
+
+    <div class="form-row">
+      <label>Hero Hand:</label>
+      <input type="text" id="trackHero" placeholder="AhKh">
+    </div>
+
+    <div class="form-row">
+      <label>Villain Hand:</label>
+      <input type="text" id="trackVillain" placeholder="QsQd">
+    </div>
+
+    <div class="form-row">
+      <label>Board (optional):</label>
+      <input type="text" id="trackBoard" placeholder="7h8dJs">
+    </div>
+
+    <button onclick="addHand()">Add to History</button>
+
+    <div id="sessionStats" style="margin-top: 20px;"></div>
+
+    <table id="handTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Hero</th>
+          <th>Villain</th>
+          <th>Board</th>
+          <th>Equity %</th>
+          <th>Favorite?</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <script src="poker.js"></script>
+  <script>
+    function toggleVsPosition() {
+      const actionType = document.getElementById("actionType").value;
+      const vsRow = document.getElementById("vsPositionRow");
+
+      if (actionType === "THREEBET" || actionType === "CALL") {
+        vsRow.style.display = "block";
+      } else {
+        vsRow.style.display = "none";
+      }
+    }
+
+    toggleVsPosition();
+  </script>
 </body>
 </html>
