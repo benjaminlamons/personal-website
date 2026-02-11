@@ -3,116 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Poker Tracker</title>
+  <title>Poker Game Theory Lab</title>
   <style>
     body {
       font-family: "Times New Roman", Times, serif;
       background-color: #f7f7f7;
       color: #222;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px;
+      padding: 20px;
     }
-    h1 { font-size: 3rem; margin-bottom: 20px; }
-    label, input, button { font-size: 1.2rem; margin: 5px; }
-    table { border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #222; padding: 8px 12px; }
-    button { cursor: pointer; }
-    .feedback { margin-top: 10px; font-weight: bold; }
+    h1 { font-size: 2.5rem; margin-bottom: 20px; }
+    label, input, button { font-size: 1.1rem; margin: 5px; }
+    table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+    th, td { border: 1px solid #222; padding: 6px 10px; text-align: center; }
+    button { cursor: pointer; margin-top: 10px; }
+    #stats, #strategy { margin-top: 20px; padding: 10px; border: 1px solid #222; background: #fff; }
   </style>
 </head>
 <body>
-  <a href="index.html" style="display:block; margin-bottom:20px; font-family:'Times New Roman'; font-size:16px;">
-    ← Back to Home
-</a>
 
-  <h1>Poker Hand Tracker</h1>
+  <a href="index.html" style="display:block; margin-bottom:20px; font-size:16px;">← Back to Home</a>
 
-  <div>
-    <label>Your Hole Cards (e.g., AsKh): </label>
-    <input type="text" id="holeCards" placeholder="Ex: AsKh" maxlength="4">
-    <label>Community Cards (optional, e.g., 7d9cJs): </label>
-    <input type="text" id="communityCards" placeholder="Ex: 7d9cJs" maxlength="10">
-    <label>Result (W/L): </label>
-    <input type="text" id="result" placeholder="W or L" maxlength="1">
-    <button onclick="addHand()">Add Hand</button>
+  <h1>Poker Game Theory Lab</h1>
+
+  <!-- Hand Input -->
+  <div id="hand-input">
+    <h2>Enter Hand</h2>
+    <label>Pre-flop (e.g., AhKh): </label>
+    <input type="text" id="preflop" maxlength="4">
+    <br>
+    <label>Flop (3 cards, e.g., QsJc9d): </label>
+    <input type="text" id="flop" maxlength="6">
+    <br>
+    <label>Turn (e.g., 2c): </label>
+    <input type="text" id="turn" maxlength="2">
+    <br>
+    <label>River (e.g., Td): </label>
+    <input type="text" id="river" maxlength="2">
+    <br>
+    <button id="add-hand">Add Hand</button>
   </div>
 
-  <div class="feedback" id="feedback"></div>
-
-  <table id="statsTable">
-    <tr>
-      <th>#</th>
-      <th>Hole Cards</th>
-      <th>Community Cards</th>
-      <th>Result</th>
-      <th>Hand Strength</th>
-    </tr>
-  </table>
-
-  <div style="margin-top:20px;">
-    <p>Total Hands: <span id="totalHands">0</span></p>
-    <p>Wins: <span id="wins">0</span></p>
-    <p>Losses: <span id="losses">0</span></p>
-    <p>Win Rate: <span id="winRate">0%</span></p>
+  <!-- Action Input -->
+  <div id="action-input">
+    <h2>Action</h2>
+    <label>Player: </label>
+    <input type="text" id="player" placeholder="Hero or Villain">
+    <label>Action: </label>
+    <select id="action">
+      <option>check</option>
+      <option>call</option>
+      <option>bet</option>
+      <option>raise</option>
+      <option>fold</option>
+    </select>
+    <label>Size: </label>
+    <input type="number" id="size" placeholder="0">
+    <button id="add-action">Add Action</button>
   </div>
 
-  <script>
-    const hands = [];
+  <!-- Hand History Table -->
+  <div id="hand-table">
+    <h2>Hand History</h2>
+    <table id="history-table">
+      <thead>
+        <tr>
+          <th>Hand #</th>
+          <th>Pre-flop</th>
+          <th>Flop</th>
+          <th>Turn</th>
+          <th>River</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-    // Preflop simple hand strength ranking
-    const strongHands = ["AA","KK","QQ","JJ","AKs","AQs","AJs","KQs"];
-    const mediumHands = ["TT","99","88","77","ATs","KJs","QJs","JTs","AK","AQ"];
-    
-    function evaluateHand(hole) {
-      const formatted = hole.toUpperCase().replace(/\s/g,"");
-      if(strongHands.includes(formatted)) return "Strong";
-      if(mediumHands.includes(formatted)) return "Medium";
-      return "Weak";
-    }
+  <!-- Stats / Analytics -->
+  <div id="stats">
+    <h2>Stats & Probabilities</h2>
+    <div id="stats-output">No hands added yet.</div>
+  </div>
 
-    function addHand() {
-      const hole = document.getElementById("holeCards").value.trim();
-      const community = document.getElementById("communityCards").value.trim();
-      const result = document.getElementById("result").value.trim().toUpperCase();
+  <!-- Strategy Advice -->
+  <div id="strategy">
+    <h2>Strategy Advice</h2>
+    <div id="strategy-output">No hands added yet.</div>
+  </div>
 
-      if(!hole) { alert("Enter hole cards!"); return; }
-      if(result && !["W","L"].includes(result)) { alert("Result must be W or L"); return; }
-
-      const strength = evaluateHand(hole);
-
-      hands.push({ hole, community, result, strength });
-
-      // Add row to table
-      const table = document.getElementById("statsTable");
-      const row = table.insertRow();
-      row.insertCell(0).innerText = hands.length;
-      row.insertCell(1).innerText = hole;
-      row.insertCell(2).innerText = community;
-      row.insertCell(3).innerText = result;
-      row.insertCell(4).innerText = strength;
-
-      // Update stats
-      const totalHands = hands.length;
-      const wins = hands.filter(h=>h.result==="W").length;
-      const losses = hands.filter(h=>h.result==="L").length;
-      const winRate = totalHands ? Math.round((wins/totalHands)*100) + "%" : "0%";
-
-      document.getElementById("totalHands").innerText = totalHands;
-      document.getElementById("wins").innerText = wins;
-      document.getElementById("losses").innerText = losses;
-      document.getElementById("winRate").innerText = winRate;
-
-      // Feedback
-      const feedbackText = `This hand is considered: ${strength}`;
-      document.getElementById("feedback").innerText = feedbackText;
-
-      // Clear inputs
-      document.getElementById("holeCards").value = "";
-      document.getElementById("communityCards").value = "";
-      document.getElementById("result").value = "";
-    }
-  </script>
+  <!-- Link JS -->
+  <script src="poker.js"></script>
 </body>
 </html>
