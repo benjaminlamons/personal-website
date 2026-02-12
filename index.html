@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Benjamin Lamons</title>
+
   <style>
-    /* Global styles */
     body {
       font-family: "Times New Roman", Times, serif;
       background-color: #f7f7f7;
@@ -16,36 +16,63 @@
       align-items: center;
       height: 100vh;
       margin: 0;
+      text-align: center;
     }
 
     h1 {
       font-size: 4rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
     }
 
     p {
       font-size: 1.5rem;
-      margin-bottom: 2rem;
+      margin-bottom: 3rem;
+      color: #444;
     }
 
-    a.button {
+    .button-container {
+      display: flex;
+      gap: 24px;
+    }
+
+    .button {
       text-decoration: none;
       background-color: #222;
       color: #fff;
-      padding: 12px 28px;
+      padding: 14px 32px;
       font-size: 1.25rem;
-      border-radius: 6px;
-      transition: background-color 0.2s ease;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      min-width: 220px;
     }
 
-    a.button:hover {
+    .button:hover {
       background-color: #555;
+      transform: translateY(-2px);
+    }
+
+    .subtext {
+      font-size: 0.9rem;
+      margin-top: 8px;
+      color: #777;
     }
   </style>
 </head>
+
 <body>
   <h1>Benjamin Lamons</h1>
-  <p>Welcome to my site.</p>
-  <a class="button" href="poker.html">Poker</a>
+  <p>Poker Tools & Experiments</p>
+
+  <div class="button-container">
+    <div>
+      <a class="button" href="poker.html">Poker Terminal</a>
+      <div class="subtext">Stats + Tracking</div>
+    </div>
+
+    <div>
+      <a class="button" href="practice.html">Practice Arena</a>
+      <div class="subtext">6-Max Bot Training</div>
+    </div>
+  </div>
 </body>
 </html>
