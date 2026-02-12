@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Poker Practice (Bots)</title>
+  <style>
+    :root { --border:#e6e6e6; --muted:#666; --bg:#fafafa; --ink:#111; }
+    body { font-family: ui-monospace, Menlo, monospace; margin: 22px; color: var(--ink); }
+    h1 { margin: 0 0 8px 0; }
+    .muted { color: var(--muted); font-size: 12px; }
+    .bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding: 12px; border:1px solid var(--border); border-radius:12px; }
+    button { padding: 8px 10px; border-radius: 10px; border:1px solid var(--border); background:white; cursor:pointer; }
+    button:disabled { opacity: 0.5; cursor:not-allowed; }
+    .row { display:flex; gap:16px; align-items:flex-start; margin-top:14px; }
+    .card { border:1px solid var(--border); border-radius:12px; padding: 14px; background:white; }
+    .left { width: 560px; }
+    .right { flex:1; min-width: 360px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top: 12px; }
+    .seat { border:1px solid #f0f0f0; border-radius:10px; padding:10px; }
+    .seat.toact { border-color: var(--ink); }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; margin-left: 6px; }
+    .line { margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+    input[type="text"] { width: 100%; padding: 10px; border-radius: 10px; border:1px solid var(--border); font-family: inherit; }
+    .log { height: 420px; overflow-y:auto; white-space: pre-wrap; background: var(--bg); border:1px solid #eee; border-radius: 10px; padding: 10px; }
+    .kvs { display:flex; gap: 16px; flex-wrap: wrap; }
+    .kv { padding: 6px 10px; background: var(--bg); border:1px solid #eee; border-radius: 10px; }
+    .help { margin-top: 8px; display:flex; flex-wrap:wrap; gap: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Practice Table (6-max, $1/$2, 100bb)</h1>
+  <div class="muted">New page for bot practice. Your existing poker terminal stays untouched.</div>
+
+  <div class="bar" style="margin-top: 12px;">
+    <button id="btnDeal">Deal</button>
+    <button id="btnNextStreet">Next street</button>
+    <button id="btnUndo">Undo</button>
+    <button id="btnReset">Reset</button>
+    <button id="btnLoad">Load scenario</button>
+    <button id="btnCopy">Copy history</button>
+    <button id="btnExport">Export JSON</button>
+
+    <label style="display:flex; align-items:center; gap:8px; margin-left: 8px;">
+      <input type="checkbox" id="botDelayToggle" />
+      Bot delay (500ms)
+    </label>
+  </div>
+
+  <div class="row">
+    <div class="card left">
+      <div class="kvs" id="meta"></div>
+
+      <div class="line">
+        <div><b>Your hand</b></div>
+        <div id="heroHand" style="margin-top:6px;"></div>
+      </div>
+
+      <div class="line">
+        <div><b>Board</b></div>
+        <div id="board" style="margin-top:6px;"></div>
+      </div>
+
+      <div class="line">
+        <div><b>Seats</b></div>
+        <div id="seats" class="grid"></div>
+      </div>
+
+      <div class="line">
+        <div><b>Terminal</b> <span class="muted">Hero only. Type and press Enter.</span></div>
+        <div class="help muted">
+          Commands:
+          <span class="pill">fold</span>
+          <span class="pill">check</span>
+          <span class="pill">call</span>
+          <span class="pill">bet 10</span>
+          <span class="pill">raise 30</span>
+        </div>
+        <input id="cmd" type="text" placeholder="Example: call" />
+        <div id="cmdError" class="muted" style="margin-top: 8px;"></div>
+      </div>
+    </div>
+
+    <div class="card right">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <b>Hand history</b>
+        <span class="muted" id="handId"></span>
+      </div>
+      <div id="log" class="log" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <script src="practice.js"></script>
+</body>
+</html>
