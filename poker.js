@@ -177,58 +177,139 @@ function rangeToHands(rangeNotations, deck) {
 
 // Hand evaluator
 function evaluateHand(cards) {
-  const sorted = [...cards].sort((a, b) => b.value - a.value);
-  const ranks = sorted.map(c => c.rank);
-  const suits = sorted.map(c => c.suit);
-  const values = sorted.map(c => c.value);
-  
-  const rankCounts = {};
-  for (const rank of ranks) {
-    rankCounts[rank] = (rankCounts[rank] || 0) + 1;
+  // Robust 7-card evaluator (best 5 out of up to 7 cards)
+  // Returns { name, rank, strength, score }
+  // rank: hand category (0..8), higher is better
+  // strength: packed tiebreakers for legacy comparisons
+  const vals = cards.map(c => RANK_VALUES[c.rank]); // 2..14
+  const valsDesc = [...vals].sort((a,b) => b-a);
+
+  // Counts by rank
+  const count = new Map();
+  for (const v of vals) count.set(v, (count.get(v) || 0) + 1);
+
+  const groups = Array.from(count.entries())
+    .map(([v,c]) => ({ v, c }))
+    .sort((a,b) => (b.c - a.c) || (b.v - a.v));
+
+  // Suits map
+  const suitMap = new Map();
+  for (const c of cards) {
+    const arr = suitMap.get(c.suit) || [];
+    arr.push(RANK_VALUES[c.rank]);
+    suitMap.set(c.suit, arr);
   }
-  
-  const counts = Object.values(rankCounts).sort((a, b) => b - a);
-  const isFlush = suits.length >= 5 && suits.slice(0,5).every(s => s === suits[0]);
-  
-  let isStraight = false;
-  let straightHigh = 0;
-  if (values.length >= 5) {
-    const uniqueValues = [...new Set(values)].sort((a, b) => b - a);
-    for (let i = 0; i <= uniqueValues.length - 5; i++) {
-      if (uniqueValues[i] - uniqueValues[i + 4] === 4) {
-        isStraight = true;
-        straightHigh = uniqueValues[i];
-        break;
+
+  function bestStraightHigh(valuesAny) {
+    const set = new Set(valuesAny);
+    if (set.has(14)) set.add(1); // wheel
+    const arr = Array.from(set).sort((a,b)=>b-a);
+    let run = 1;
+    for (let i=0;i<arr.length-1;i++){
+      if (arr[i] - arr[i+1] === 1){
+        run++;
+        if (run >= 5){
+          const high = arr[i-3];
+          return high === 1 ? 5 : high;
+        }
+      } else {
+        run = 1;
       }
     }
-    if (!isStraight && uniqueValues.includes(12) && uniqueValues.includes(0) && 
-        uniqueValues.includes(1) && uniqueValues.includes(2) && uniqueValues.includes(3)) {
-      isStraight = true;
-      straightHigh = 3;
+    return 0;
+  }
+
+  function pack(scoreArr){
+    // pack tiebreakers into a number for backward compat
+    let x = 0;
+    for (let i=1;i<scoreArr.length;i++){
+      x = x * 15 + (scoreArr[i] || 0);
+    }
+    return x;
+  }
+
+  // Flush detection
+  let flushValsDesc = null;
+  for (const arr of suitMap.values()){
+    if (arr.length >= 5){
+      flushValsDesc = [...arr].sort((a,b)=>b-a);
+      break;
     }
   }
-  
-  if (isStraight && isFlush) {
-    if (values[0] === 12 && values.includes(8)) return { rank: 9, name: 'Royal Flush', strength: 900 };
-    return { rank: 8, name: 'Straight Flush', strength: 800 + straightHigh };
+
+  // Straight flush
+  if (flushValsDesc){
+    const sfHigh = bestStraightHigh(flushValsDesc);
+    if (sfHigh){
+      const score = [8, sfHigh];
+      return {
+        name: (sfHigh === 14) ? "Royal Flush" : "Straight Flush",
+        rank: 8,
+        strength: pack(score),
+        score
+      };
+    }
   }
-  if (counts[0] === 4) {
-    const quadRank = Object.entries(rankCounts).find(([r, c]) => c === 4)[0];
-    return { rank: 7, name: 'Four of a Kind', strength: 700 + RANK_VALUES[quadRank] };
+
+  // Quads
+  if (groups[0]?.c === 4){
+    const quad = groups[0].v;
+    const kicker = valsDesc.find(v => v !== quad) || 0;
+    const score = [7, quad, kicker];
+    return { name: "Four of a Kind", rank: 7, strength: pack(score), score };
   }
-  if (counts[0] === 3 && counts[1] === 2) return { rank: 6, name: 'Full House', strength: 600 };
-  if (isFlush) return { rank: 5, name: 'Flush', strength: 500 + values[0] };
-  if (isStraight) return { rank: 4, name: 'Straight', strength: 400 + straightHigh };
-  if (counts[0] === 3) {
-    const tripRank = Object.entries(rankCounts).find(([r, c]) => c === 3)[0];
-    return { rank: 3, name: 'Three of a Kind', strength: 300 + RANK_VALUES[tripRank] };
+
+  // Full house
+  const trips = groups.filter(g=>g.c===3).map(g=>g.v).sort((a,b)=>b-a);
+  const pairs = groups.filter(g=>g.c===2).map(g=>g.v).sort((a,b)=>b-a);
+  if (trips.length >= 1 && (pairs.length >= 1 || trips.length >= 2)){
+    const t = trips[0];
+    const p = trips.length >= 2 ? trips[1] : pairs[0];
+    const score = [6, t, p];
+    return { name: "Full House", rank: 6, strength: pack(score), score };
   }
-  if (counts[0] === 2 && counts[1] === 2) return { rank: 2, name: 'Two Pair', strength: 200 };
-  if (counts[0] === 2) {
-    const pairRank = Object.entries(rankCounts).find(([r, c]) => c === 2)[0];
-    return { rank: 1, name: 'Pair', strength: 100 + RANK_VALUES[pairRank] };
+
+  // Flush
+  if (flushValsDesc){
+    const top5 = flushValsDesc.slice(0,5);
+    const score = [5, ...top5];
+    return { name: "Flush", rank: 5, strength: pack(score), score };
   }
-  return { rank: 0, name: 'High Card', strength: values[0] };
+
+  // Straight
+  const stHigh = bestStraightHigh(vals);
+  if (stHigh){
+    const score = [4, stHigh];
+    return { name: "Straight", rank: 4, strength: pack(score), score };
+  }
+
+  // Trips
+  if (trips.length >= 1){
+    const t = trips[0];
+    const kickers = valsDesc.filter(v => v !== t).slice(0,2);
+    const score = [3, t, ...kickers];
+    return { name: "Three of a Kind", rank: 3, strength: pack(score), score };
+  }
+
+  // Two pair
+  if (pairs.length >= 2){
+    const hp = pairs[0], lp = pairs[1];
+    const kicker = valsDesc.find(v => v !== hp && v !== lp) || 0;
+    const score = [2, hp, lp, kicker];
+    return { name: "Two Pair", rank: 2, strength: pack(score), score };
+  }
+
+  // One pair
+  if (pairs.length === 1){
+    const p = pairs[0];
+    const kickers = valsDesc.filter(v => v !== p).slice(0,3);
+    const score = [1, p, ...kickers];
+    return { name: "Pair", rank: 1, strength: pack(score), score };
+  }
+
+  // High card
+  const score = [0, ...valsDesc.slice(0,5)];
+  return { name: "High Card", rank: 0, strength: pack(score), score };
 }
 
 // Drawing hands analysis
@@ -611,46 +692,127 @@ function showPreflop() {
 }
 
 function runMonteCarlo() {
-  const hero = document.getElementById("mcHeroHand").value;
-  const villain = document.getElementById("villainRange").value;
-  const board = document.getElementById("board").value;
-  
-  if (!hero) {
-    document.getElementById("mcResult").innerHTML = '<span style="color: red;">Please enter hero hand</span>';
+  const heroStr = document.getElementById("mcHeroHand").value;
+  const villainStr = document.getElementById("villainRange").value;
+  const boardStr = document.getElementById("board").value;
+  const itersEl = document.getElementById("mcIterations");
+  const iterations = itersEl ? parseInt(itersEl.value, 10) : 10000;
+
+  const mcResultEl = document.getElementById("mcResult");
+  const mcProgEl = document.getElementById("mcProgress");
+
+  const heroCards = parseHand(heroStr);
+  const boardCards = boardStr ? parseHand(boardStr) : [];
+  const rangeNotations = parseRange(villainStr);
+
+  // Validation highlighting (best-effort)
+  try {
+    const heroInput = document.getElementById("mcHeroHand");
+    const boardInput = document.getElementById("board");
+    const rangeInput = document.getElementById("villainRange");
+    if (heroInput) heroInput.classList.toggle("invalid", !(heroCards && heroCards.length === 2));
+    if (heroInput) heroInput.classList.toggle("valid", !!(heroCards && heroCards.length === 2));
+    const boardOk = (boardCards !== null) && (boardCards.length === 0 || (boardCards.length >= 3 && boardCards.length <= 5));
+    if (boardInput) boardInput.classList.toggle("invalid", !boardOk);
+    if (boardInput) boardInput.classList.toggle("valid", boardOk && boardStr.trim().length > 0);
+    if (rangeInput) rangeInput.classList.toggle("invalid", !(rangeNotations && rangeNotations.length));
+  } catch {}
+
+  if (!heroCards || heroCards.length !== 2) {
+    mcResultEl.innerHTML = '<span style="color: red;">Invalid hero hand (need exactly 2 cards like AhKh)</span>';
     return;
   }
-  
-  document.getElementById("mcResult").innerHTML = '<div style="color: #666;">Running 10,000 simulations...</div>';
-  
-  setTimeout(() => {
-    const result = runMonteCarloSimulation(hero, villain, board, 10000);
-    
-    if (result.error) {
-      document.getElementById("mcResult").innerHTML = `<span style="color: red;">Error: ${result.error}</span>`;
+  if (boardCards === null || !(boardCards.length === 0 || (boardCards.length >= 3 && boardCards.length <= 5))) {
+    mcResultEl.innerHTML = '<span style="color: red;">Invalid board (leave empty or enter 3 to 5 cards)</span>';
+    return;
+  }
+  if (!rangeNotations || rangeNotations.length === 0) {
+    mcResultEl.innerHTML = '<span style="color: red;">Please enter a villain range</span>';
+    return;
+  }
+
+  mcResultEl.innerHTML = `<div style="color:#666;">Running ${iterations.toLocaleString()} simulations...</div>`;
+  if (mcProgEl) mcProgEl.innerHTML = `<div style="color:#666;">0%</div>`;
+
+  const baseDeck = createDeck();
+  const availableDeck = removeCards(baseDeck, heroCards, boardCards);
+  const villainHands = rangeToHands(rangeNotations, availableDeck);
+
+  if (villainHands.length === 0) {
+    mcResultEl.innerHTML = `<span style="color:red;">Error: No valid villain hands in range (given dead cards)</span>`;
+    return;
+  }
+
+  const CHUNK = 2000;
+  let done = 0;
+
+  let heroWins = 0;
+  let villainWins = 0;
+  let ties = 0;
+  const handTypeWins = {};
+
+  const start = performance.now();
+
+  function step() {
+    const n = Math.min(CHUNK, iterations - done);
+    for (let i = 0; i < n; i++) {
+      const villainHand = villainHands[Math.floor(Math.random() * villainHands.length)];
+      const simDeck = removeCards(availableDeck, villainHand);
+      const shuffled = shuffle(simDeck);
+
+      const boardSize = boardCards.length;
+      const simBoard = [...boardCards];
+      for (let j = boardSize; j < 5; j++) simBoard.push(shuffled[j - boardSize]);
+
+      const heroEval = evaluateHand([...heroCards, ...simBoard]);
+      const villainEval = evaluateHand([...villainHand, ...simBoard]);
+
+      if (heroEval.rank > villainEval.rank ||
+          (heroEval.rank === villainEval.rank && heroEval.strength > villainEval.strength)) {
+        heroWins++;
+        handTypeWins[heroEval.name] = (handTypeWins[heroEval.name] || 0) + 1;
+      } else if (heroEval.rank < villainEval.rank ||
+                 (heroEval.rank === villainEval.rank && heroEval.strength < villainEval.strength)) {
+        villainWins++;
+      } else {
+        ties++;
+      }
+    }
+
+    done += n;
+    const pct = Math.floor((done / iterations) * 100);
+    if (mcProgEl) mcProgEl.innerHTML = `<div style="color:#666;">${pct}%</div>`;
+
+    if (done < iterations) {
+      setTimeout(step, 0);
       return;
     }
-    
-    const color = result.equity >= 50 ? '#5cb85c' : result.equity >= 35 ? '#f0ad4e' : '#d9534f';
-    
-    const topWins = Object.entries(result.handTypeWins)
+
+    const equity = ((heroWins + ties * 0.5) / iterations) * 100;
+    const ms = Math.round(performance.now() - start);
+    const color = equity >= 50 ? '#5cb85c' : equity >= 35 ? '#f0ad4e' : '#d9534f';
+
+    const topWins = Object.entries(handTypeWins)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
       .map(([name, count]) => `${name}: ${count}`)
       .join(', ');
-    
-    document.getElementById("mcResult").innerHTML = `
+
+    mcResultEl.innerHTML = `
       <div style="padding: 15px; background: #f0f0f0; border-radius: 5px; margin-top: 10px;">
         <div style="font-size: 1.5rem; color: ${color}; margin-bottom: 10px;">
-          <strong>Equity: ${result.equity.toFixed(1)}%</strong>
+          <strong>Equity: ${equity.toFixed(2)}%</strong>
         </div>
         <div style="font-size: 1rem; line-height: 1.8;">
-          Wins: ${result.heroWins} | Losses: ${result.villainWins} | Ties: ${result.ties}<br>
-          Win Rate: ${result.winRate}% | Simulations: ${result.totalSims.toLocaleString()}<br>
-          Top Hands: ${topWins || 'N/A'}
+          Wins: ${heroWins} | Losses: ${villainWins} | Ties: ${ties}<br>
+          Simulations: ${iterations.toLocaleString()} | Time: ${ms}ms<br>
+          Top Hands (wins): ${topWins || 'N/A'}
         </div>
       </div>
     `;
-  }, 100);
+  }
+
+  setTimeout(step, 0);
 }
 
 function calculatePotOddsEV() {
