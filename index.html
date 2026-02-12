@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- HOME V2 MARKER -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Benjamin Lamons</title>
@@ -8,71 +9,55 @@
   <style>
     body {
       font-family: "Times New Roman", Times, serif;
-      background-color: #f7f7f7;
-      color: #222;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background: #ffffff;
+      color: #111;
       margin: 0;
-      text-align: center;
+    }
+
+    .wrap {
+      max-width: 650px;
+      margin: 60px auto;
+      padding: 0 18px;
+      line-height: 1.6;
     }
 
     h1 {
-      font-size: 4rem;
-      margin-bottom: 0.5rem;
+      font-size: 2.2rem;
+      font-weight: normal;
+      margin: 0 0 18px 0;
     }
 
-    p {
-      font-size: 1.5rem;
-      margin-bottom: 3rem;
-      color: #444;
+    ul {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 1.1rem;
     }
 
-    .button-container {
-      display: flex;
-      gap: 24px;
+    li {
+      margin: 8px 0;
     }
 
-    .button {
+    a {
+      color: #111;
+    }
+
+    a:hover {
       text-decoration: none;
-      background-color: #222;
-      color: #fff;
-      padding: 14px 32px;
-      font-size: 1.25rem;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      min-width: 220px;
-    }
-
-    .button:hover {
-      background-color: #555;
-      transform: translateY(-2px);
-    }
-
-    .subtext {
-      font-size: 0.9rem;
-      margin-top: 8px;
-      color: #777;
     }
   </style>
 </head>
 
 <body>
-  <h1>Benjamin Lamons</h1>
-  <p>Poker Tools & Experiments</p>
+  <div class="wrap">
+    <h1>Benjamin Lamons</h1>
 
-  <div class="button-container">
-    <div>
-      <a class="button" href="poker.html">Poker Terminal</a>
-      <div class="subtext">Stats + Tracking</div>
-    </div>
-
-    <div>
-      <a class="button" href="practice.html">Practice Arena</a>
-      <div class="subtext">6-Max Bot Training</div>
-    </div>
+    <ul>
+      <li><a href="about.html">About</a></li>
+      <li><a href="reading.html">Reading</a></li>
+      <li><a href="running.html">Running</a></li>
+      <li><a href="poker.html">Poker</a></li>
+      <li><a href="practice.html">Poker practice</a></li>
+    </ul>
   </div>
 </body>
 </html>
